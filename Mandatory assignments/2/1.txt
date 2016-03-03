@@ -1,0 +1,2 @@
+Backward validation is better when you have fewer queries than facts as backwards validation will result in a number of trees <= to the number of queries.
+Forwards validation will result in a number of tree >= to the number of known facts.
