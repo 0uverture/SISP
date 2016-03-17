@@ -1,4 +1,6 @@
-public class MaekGameLogic implements IGameLogic {
+import Group12.*;
+
+public class Group12GameLogic implements IGameLogic {
     private int x = 0;
     private int y = 0;
     private int playerID;

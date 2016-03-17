@@ -1,2 +1,6 @@
-Overall structure
-		Board state representation
+\section{Overall structure}
+This section aims to describe the overall structure of the AI and thus also this report.
+The AI builds on the minimax algorithm for traversing the game tree.
+As the game tree for a standard 7x6 board is too large to compute within a reasonable time period, we use a heuristic function for a board state.
+Because the AI is required to find a solution in a fixed amount of time, we also use iterative deepening to optimize the time used each ply.
+Further optimizing steps include alpha-beta pruning and transposition tables.

@@ -1,2 +1,8 @@
-Transposition table
-		Mirrored hash function
+In a single run of minimax, it would be a wasteful to evaluate a state that has previously been evaluated.
+To improve this, a hashmap of all calculated board states and their evaluation value is maintained throughout the run.
+When using an evaluation from the table, it is important that it is based on equal or larger depth than the current depth -- otherwise the evaluation value would be less qualified.
+Therefore the transposition table is cleared each time the depth changes during iterative deepening.
+
+As the board in connect four is symmetrical, a simple optimization is to consider the mirror of a board state as having equal value to the actual board state.
+This is easy to implement in the transposition table by considering mirrored positions in the hash function.
+For example, when the hash function is processing the position $(0, 0)$, the function also considers the mirrored position $(7,0)$.

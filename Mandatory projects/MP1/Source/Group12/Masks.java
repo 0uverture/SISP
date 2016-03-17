@@ -1,3 +1,5 @@
+package Group12;
+
 public class Masks {
     private final int width;
     private final int height;
