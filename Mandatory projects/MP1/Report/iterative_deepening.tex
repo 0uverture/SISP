@@ -1,2 +1,5 @@
-Iterative deepening
-		Sortering af resultater
+\section{Iterative deepening}
+In order to be able to have some control over the time used for each move, we have implemented iterative depth-first search (iterative deepening) of the game tree. This enables us to make a cut-off function that takes into account how much time has elapsed since the search began, and thus we can estimate if there is enough time to search again with depth+1 (see \ref{cutoff}). 
+Since the lowest depth will always dominate the game tree, this results in a time complexity of O(b\textsuperscript{d}), where b is the branching factor, and d is the depth. See the "Artificial Intelligence - A Modern Approach" Fourth Edition, section 3.4.5 for more details.
+\subsection{Sorting the results}
+Since we know the best path in the last iteration of the search, we attempt to use this knowledge to optimize the alpha-beta-pruning, and thus alleviate some of the extra cost of using iterative deepening. It is done by sorting the nodes with depth 1 by minimaxvalue in the root-node. This results in an ordering of the nodes, and thereby which columns that results in a better board-state in the last iteration of the search. We chose the paths in the depth-first search according to this order \emph{in each node}. At the time of writing, we are not entirely sure whether there is any gain in doing this at depths \neq 0.
