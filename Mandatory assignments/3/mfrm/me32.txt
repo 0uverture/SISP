@@ -1,0 +1,1 @@
+3) The ROBDD can at most be K wide, and at most be N deep, since the number of paths traversed to get "true", is at least K, and at most N. As such, the bound of the function for the number of internal nodes will be k*n.
