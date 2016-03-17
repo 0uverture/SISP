@@ -1,3 +1,4 @@
+\section{Transposition table}
 In a single run of minimax, it would be a wasteful to evaluate a state that has previously been evaluated.
 To improve this, a hashmap of all calculated board states and their evaluation value is maintained throughout the run.
 When using an evaluation from the table, it is important that it is based on equal or larger depth than the current depth -- otherwise the evaluation value would be less qualified.
