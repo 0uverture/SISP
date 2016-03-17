@@ -1,4 +1,13 @@
-Heuristic evaluation
-		Cutoff
-		Bitmasks
-		Vægtning af nederste rækker
+\section{Heuristic evaluation}
+
+Because the complete game tree is about 7\textsuperscript{42} in size it is impossible to compute the entirety of it within the alotted time. This makes a heuristic invaluable, because it allows us to estimate whether or not you are winning without knowing the complete tree. Because of the way that the heuristic is calculated, a cutoff has to be made, as an unbalanced tree would result in an unbalanced, and therefore useless, heuristic.
+
+\subsection{Bitmasks}
+
+Given a direction, every winning position can be described with a bitmask where a four bits indicates the starting position of it. These are stored for all 8 directions in arrays where the index is the number assigned to a position from the lower-left to top-right. 
+The boardstate is represented in a bytearray as long as there are positions in the board, which traditionally means 42. Each byte is either 0, indicating that the position is empty, 1 indicating that the position is occupied by player 1 or 2 indicating that the position is occupied by player 2. This representation of the boardstate is used primarily to evaluate whether or not a player has won.
+Additionally a bitmask is maintained for each player, indicating which positions belong to that player, along with a bitmask indicating the empty positions. By these bitmasks, a boardstate is evaluated by how many winning states are available to player one subtracted with the number of winning states available to player two, both of which are constructed by performing a bitwise \emph{or} operation on the bitmask of the player and the bitmask indicating the empty positions.
+
+\subsection{Row weighting}
+
+The value of a winning position is weighted by how far from the height of the board the winning position is located. This is done because.
