@@ -21,6 +21,7 @@ public class QueensLogic {
     private BDD problem;
 
     public QueensLogic() {
+
     }
 
     public void initializeGame(int size) {
@@ -51,15 +52,14 @@ public class QueensLogic {
             for (int x = 0; x < width; x++) {
                 int i = y*width+x;
 
+                int minAxisSE = Math.min(x, y);
+                int minAxisSW = Math.min(width-x-1, y);
+
                 constraints[i] =
-                    createAttackBDD(x, y, -1,  0 ).andWith( // N
-                    createAttackBDD(x, y, -1,  1)).andWith( // NE
-                    createAttackBDD(x, y,  0,  1)).andWith( // E
-                    createAttackBDD(x, y,  1,  1)).andWith( // SE
-                    createAttackBDD(x, y,  1,  0)).andWith( // S
-                    createAttackBDD(x, y,  1, -1)).andWith( // SW
-                    createAttackBDD(x, y,  0, -1)).andWith( // W
-                    createAttackBDD(x, y, -1, -1));         // NW
+                    createAttackBDD(x, 0, 1, 0 ).andWith(  // S
+                    createAttackBDD(0, y, 0, 1)).andWith(  // E
+                    createAttackBDD(x-minAxisSE, y-minAxisSE, 1, 1)).andWith( // SE
+                    createAttackBDD(x+minAxisSW, y-minAxisSW, 1, -1));        // SW
             }
         }
 
@@ -83,16 +83,14 @@ public class QueensLogic {
     }
 
     private boolean rowHasQueen(int y) {
-        int c = 0;
         for (int x = 0; x < width; x++) {
-            if (board[x][y] == 1)
-                c++;
+            if (board[x][y] == 1) return true;
         }
-        return c == 1;
+        return false;
     }
 
     private BDD createAttackBDD(int x, int y, int down, int right) {
-        BDD currVar = fact.zero();
+        BDD currVar = fact.one();
         BDD result = fact.one();
 
         while(x >= 0 && x < width && y >= 0 && y < height) {
@@ -123,7 +121,6 @@ public class QueensLogic {
 
                 int result = original;
                 double satCount = problem.satCount();
-
                 System.out.println(i +  ": " + satCount);
 
                 if (satCount == 0 && result != 1)
@@ -141,10 +138,6 @@ public class QueensLogic {
 
     public boolean insertQueen(int x, int y) {
         board[x][y] = 1;
-
-        boardVars = createBoardVars();
-        boardConstraints = createBoardConstraints();
-
         return true;
     }
 }
