@@ -1,6 +1,6 @@
 import java.util.*;
+import java.math.BigInteger;
 import net.sf.javabdd.*;
-
 public class QueensLogic {
     private int total;
     private int n;
@@ -23,8 +23,8 @@ public class QueensLogic {
         fact.setVarNum(total);
 
         this.boardRules = new BDD[n][n];
-        buildBoardRules();
         buildQueenRule();
+        buildBoardRules();
     }
 
     public int[][] getGameBoard() {
@@ -41,8 +41,15 @@ public class QueensLogic {
     public boolean insertQueen(int x, int y) {
         if (board[x][y] != 0) return true;
 
-        //restrictBoardRules(x, y);
         queenRule.restrictWith(var(x, y));
+
+        if (queenRule.pathCount() == 1) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < n; i++) {
+                    board[i][j] = board[i][j] == 0 ? 1 : board[i][j];
+                }
+            }
+        }
 
         board[x][y] = 1;
         return true;
@@ -57,9 +64,14 @@ public class QueensLogic {
     }
 
     private void buildBoardRules() {
+        BDD we   = fact.one(),
+            ns   = fact.one(),
+            nwse = fact.one(),
+            nesw = fact.one();
+
         for (int y = 0; y < n; y++) {
             for (int x = 0; x < n; x++) {
-                BDD rule = boardRules[x][y] = fact.one();
+                int delta;
 
                 // Add W->E rule
                 for (int i = 0; i < n; i++) {
@@ -67,7 +79,7 @@ public class QueensLogic {
 
                     BDD var  = var(x, y);
                     BDD that = var(i, y);
-                    rule.andWith(var.apply(that, BDDFactory.nand));
+                    we.andWith(var.apply(that, BDDFactory.nand));
                 }
 
                 // Add N->S rule
@@ -76,26 +88,46 @@ public class QueensLogic {
 
                     BDD var  = var(x, y);
                     BDD that = var(x, i);
-                    rule.andWith(var.apply(that, BDDFactory.nand));
+                    ns.andWith(var.apply(that, BDDFactory.nand));
                 }
 
                 // Add NW->SE rule
-                // TODO
+                delta = Math.min(x, y);
+                for (int i = 0; i < n - Math.abs(x - y); i++) {
+                    int dx = x - delta + i;
+                    int dy = y - delta + i;
+
+                    // System.out.println("dx: " + dx + " dy: " + dy);
+
+                    if (dx == x && dy == y) continue;
+
+                    BDD var  = var(x, y);
+                    BDD that = var(dx, dy);
+                    nwse.andWith(var.apply(that, BDDFactory.nand));
+                }
 
                 // Add NE->SW rule
-                // TODO
+                delta = Math.min(n - x - 1, y);
+                for (int i = 0; i < n - Math.abs(n - x - y - 1); i++) {
+                    int dx = x + delta - i;
+                    int dy = y - delta + i;
+
+                    // System.out.println("dx: " + dx + " dy: " + dy);
+
+                    if (dx == x && dy == y) continue;
+
+                    BDD var  = var(x, y);
+                    BDD that = var(dx, dy);
+                    nesw.andWith(var.apply(that, BDDFactory.nand));
+                }
             }
         }
-    }
 
-    // private void restrictBoardRules(int vx, int vy) {
-    //     for (int ry = 0; ry < n; ry++) {
-    //         for (int rx = 0; rx < n; rx++) {
-    //             BDD var = var(vx, vy);
-    //             boardRules[rx][ry].restrictWith(var);
-    //         }
-    //     }
-    // }
+        we.andWith(ns);
+        nwse.andWith(we);
+        nesw.andWith(nwse);
+        queenRule.andWith(nesw);
+    }
 
     private void buildQueenRule() {
         queenRule = fact.one();
@@ -104,17 +136,10 @@ public class QueensLogic {
             BDD rowRule = fact.zero();
 
             for (int x = 0; x < n; x++) {
-                BDD boardRule = boardRules[x][y];
-                rowRule.orWith(boardRule.id());
+                rowRule.orWith(var(x, y));
             }
 
             queenRule.andWith(rowRule);
         }
     }
 }
-
-// for (int y = 0; y < n; y++) {
-//     for (int x = 0; x < n; x++) {
-           
-//     }
-// }
