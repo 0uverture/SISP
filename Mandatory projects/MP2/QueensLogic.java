@@ -1,143 +1,120 @@
-/**
- * This class implements the logic behind the BDD for the n-queens problem
- * You should implement all the missing methods
- * 
- * @author Stavros Amanatidis
- *
- */
 import java.util.*;
-
 import net.sf.javabdd.*;
 
 public class QueensLogic {
-    private int width = 0;
-    private int height = 0;
-    private int size = 0;
+    private int total;
+    private int n;
     private int[][] board;
-        
+
     private BDDFactory fact;
-    private BDD[] boardVars;
-    private BDD[] boardConstraints;
-    private BDD problem;
+    private BDD[][] boardRules;
+    private BDD queenRule;
 
     public QueensLogic() {
 
     }
 
     public void initializeGame(int size) {
-        this.width = size;
-        this.height = size;
-        this.size = size*size;
-        this.board = new int[size][size];
-        
-        this.fact = JFactory.init(size, size);
-        fact.setVarNum(size*size);
+        this.total = size*size;
+        this.n     = size;
+        this.board = new int[n][n];
 
-        this.boardVars = createBoardVars();
-        this.boardConstraints = createBoardConstraints();
-    }
+        this.fact = JFactory.init(2000000, 200000);
+        fact.setVarNum(total);
 
-    private BDD[] createBoardVars() {
-        BDD[] vars = new BDD[size];
-        for (int i = 0; i < size; i++) {
-            vars[i] = board[i%width][i/width] == 1 ? fact.one() : fact.zero();
-        }
-        return vars;
-    }
-
-    private BDD[] createBoardConstraints() {
-        BDD[] constraints = new BDD[size];
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int i = y*width+x;
-
-                int minAxisSE = Math.min(x, y);
-                int minAxisSW = Math.min(width-x-1, y);
-
-                constraints[i] =
-                    createAttackBDD(x, 0, 1, 0 ).andWith(  // S
-                    createAttackBDD(0, y, 0, 1)).andWith(  // E
-                    createAttackBDD(x-minAxisSE, y-minAxisSE, 1, 1)).andWith( // SE
-                    createAttackBDD(x+minAxisSW, y-minAxisSW, 1, -1));        // SW
-            }
-        }
-
-        problem = fact.one();
-
-        for (int y = 0; y < height; y++) {
-            if (rowHasQueen(y)) continue;
-
-            BDD row = fact.zero();
-
-            for (int x = 0; x < width; x++) {
-                int i = y*width+x;
-
-                row.orWith(constraints[i].id());
-            }
-
-            problem.andWith(row);
-        }
-
-        return constraints;
-    }
-
-    private boolean rowHasQueen(int y) {
-        for (int x = 0; x < width; x++) {
-            if (board[x][y] == 1) return true;
-        }
-        return false;
-    }
-
-    private BDD createAttackBDD(int x, int y, int down, int right) {
-        BDD currVar = fact.one();
-        BDD result = fact.one();
-
-        while(x >= 0 && x < width && y >= 0 && y < height) {
-            int i = y*width+x;
-            BDD constraint = currVar.apply(boardVars[i], BDDFactory.nand);
-            result.andWith(constraint);
-
-            x += right;
-            y += down;
-        }
-
-        return result;
+        this.boardRules = new BDD[n][n];
+        buildBoardRules();
+        buildQueenRule();
     }
 
     public int[][] getGameBoard() {
-        int[][] resultBoard = new int[width][height];
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int i = y*width+x;
-
-                int original = board[x][y];
-                board[x][y] = 1;
-
-                boardVars = createBoardVars();
-                boardConstraints = createBoardConstraints();
-
-
-                int result = original;
-                double satCount = problem.satCount();
-                System.out.println(i +  ": " + satCount);
-
-                if (satCount == 0 && result != 1)
-                    result = -1;
-
-                resultBoard[x][y] = result;
-
-
-                board[x][y] = original;
+        for (int y = 0; y < n; y++) {
+            for (int x = 0; x < n; x++) {
+                BDD r = queenRule.restrict(var(x, y));
+                if (r.isZero()) board[x][y] = -1;
             }
         }
 
-        return resultBoard;
+        return board;
     }
 
     public boolean insertQueen(int x, int y) {
+        if (board[x][y] != 0) return true;
+
+        //restrictBoardRules(x, y);
+        queenRule.restrictWith(var(x, y));
+
         board[x][y] = 1;
         return true;
     }
+
+    private int index(int x, int y) {
+        return y*n + x;
+    }
+
+    private BDD var(int x, int y) {
+        return fact.ithVar(index(x, y));
+    }
+
+    private void buildBoardRules() {
+        for (int y = 0; y < n; y++) {
+            for (int x = 0; x < n; x++) {
+                BDD rule = boardRules[x][y] = fact.one();
+
+                // Add W->E rule
+                for (int i = 0; i < n; i++) {
+                    if (i == x) continue;
+
+                    BDD var  = var(x, y);
+                    BDD that = var(i, y);
+                    rule.andWith(var.apply(that, BDDFactory.nand));
+                }
+
+                // Add N->S rule
+                for (int i = 0; i < n; i++) {
+                    if (i == y) continue;
+
+                    BDD var  = var(x, y);
+                    BDD that = var(x, i);
+                    rule.andWith(var.apply(that, BDDFactory.nand));
+                }
+
+                // Add NW->SE rule
+                // TODO
+
+                // Add NE->SW rule
+                // TODO
+            }
+        }
+    }
+
+    // private void restrictBoardRules(int vx, int vy) {
+    //     for (int ry = 0; ry < n; ry++) {
+    //         for (int rx = 0; rx < n; rx++) {
+    //             BDD var = var(vx, vy);
+    //             boardRules[rx][ry].restrictWith(var);
+    //         }
+    //     }
+    // }
+
+    private void buildQueenRule() {
+        queenRule = fact.one();
+
+        for (int y = 0; y < n; y++) {
+            BDD rowRule = fact.zero();
+
+            for (int x = 0; x < n; x++) {
+                BDD boardRule = boardRules[x][y];
+                rowRule.orWith(boardRule.id());
+            }
+
+            queenRule.andWith(rowRule);
+        }
+    }
 }
+
+// for (int y = 0; y < n; y++) {
+//     for (int x = 0; x < n; x++) {
+           
+//     }
+// }
