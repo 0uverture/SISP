@@ -1,18 +1,14 @@
 import java.util.*;
 import java.math.BigInteger;
 import net.sf.javabdd.*;
+
 public class QueensLogic {
     private int total;
     private int n;
     private int[][] board;
 
     private BDDFactory fact;
-    private BDD[][] boardRules;
     private BDD queenRule;
-
-    public QueensLogic() {
-
-    }
 
     public void initializeGame(int size) {
         this.total = size*size;
@@ -22,7 +18,6 @@ public class QueensLogic {
         this.fact = JFactory.init(2000000, 200000);
         fact.setVarNum(total);
 
-        this.boardRules = new BDD[n][n];
         buildQueenRule();
         buildBoardRules();
     }
@@ -39,7 +34,7 @@ public class QueensLogic {
     }
 
     public boolean insertQueen(int x, int y) {
-        if (board[x][y] != 0) return true;
+        if (board[x][y] != 0) return false;
 
         queenRule.restrictWith(var(x, y));
 
@@ -97,8 +92,6 @@ public class QueensLogic {
                     int dx = x - delta + i;
                     int dy = y - delta + i;
 
-                    // System.out.println("dx: " + dx + " dy: " + dy);
-
                     if (dx == x && dy == y) continue;
 
                     BDD var  = var(x, y);
@@ -111,8 +104,6 @@ public class QueensLogic {
                 for (int i = 0; i < n - Math.abs(n - x - y - 1); i++) {
                     int dx = x + delta - i;
                     int dy = y - delta + i;
-
-                    // System.out.println("dx: " + dx + " dy: " + dy);
 
                     if (dx == x && dy == y) continue;
 
